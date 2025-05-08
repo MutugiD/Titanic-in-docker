@@ -9,6 +9,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# env folders
+**/titanic_env/
+
+# ignore the standalone info.txt file
+info.txt
+
 # C extensions
 *.so
 
