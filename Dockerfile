@@ -1,49 +1,29 @@
-# FROM ubuntu uncomment if you want to use ubuntu
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │                              Dockerfile                               │
+# └─────────────────────────────────────────────────────────────────────────┘
 
-# Install pip and git
-# RUN apt-get update && apt-get install --assume-yes --fix-missing python-pip git
+# 1. Use a minimal Python base
+FROM python:3.12-slim
 
-# Clone repository to /app folder in the container image
-# RUN git clone https://github.com/deepakiim/Deploy-machine-learning-model.git /app
+# 2. Create a non-root user & switch to it
+RUN useradd --create-home --shell /bin/bash appuser
 
-#####################################################################################################################
-FROM python:3.6.6-slim
-
-# Mount current directory to /app in the container image
-VOLUME ./:app/
-
-# Copy local directory to /app in container
-# Dont use COPY * /app/ , * will lead to lose of folder structure in /app
-COPY . /app/
-
-# Change WORKDIR
+# 3. Set a locked-down working directory
 WORKDIR /app
 
-# Install dependencies
-# use --proxy http://<proxy host>:port if you have proxy
-RUN pip install -r requirements.txt
+# 4. Ensure model directory exists and set ownership
+RUN mkdir -p /app/model && chown appuser:appuser /app/model
 
-# In Docker, the containers themselves can have applications running on ports. To access these applications, we need to expose the containers internal port and bind the exposed port to a specified port on the host.
-# Expose port and run the application when the container is started
-EXPOSE 9999:9999
-ENTRYPOINT python flask_api.py 9999
-# CMD ["flask_api.py"]
+# 5. Copy & install only dependencies first (cache-friendly)
+COPY --chown=appuser:appuser requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 
+# 6. Copy application code
+COPY --chown=appuser:appuser . ./
 
-# docker build
-# docker build -t "<app name>" .
+# 7. Expose only the port your app needs
+EXPOSE 9999
 
-# docker run
-# docker run ml_app -p 9999 # to make the port externally avaiable for browsers
+# 8. Run as non-root user default entrypoint
+ENTRYPOINT ["python", "main.py", "9999"]
 
-# show all running containers
-# docker ps
-
-# Kill and remove running container
-# docker rm <containerid> -f
-
-# open bash in a running docker container
-# docker exec -ti <containerid> bash
-
-# docker compose
-# run and interact between multiple docker containers

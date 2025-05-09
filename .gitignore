@@ -11,6 +11,7 @@ __pycache__/
 
 # env folders
 **/titanic_env/
+.env
 
 # ignore the standalone info.txt file
 info.txt
